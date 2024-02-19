@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:task_one/controller/api.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -6,56 +7,67 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Screen'),
-      ),
-      body: AlertDialog(
-        backgroundColor: Colors.grey,
-        content: SizedBox(
-          height: 200,
-          width: 200,
-          child: const Center(
-              child: Text(
-            'Welcome',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          )),
+    return Consumer<Api>(
+      builder: (context, value, child) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Home Screen'),
         ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Back')),
-          ElevatedButton(
+        body: AlertDialog(
+          backgroundColor: Colors.grey,
+          content: const SizedBox(
+            height: 200,
+            width: 200,
+            child: Center(
+                child: Text(
+              'Welcome',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            )),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Back')),
+            ElevatedButton(
               onPressed: () async {
-                Api obj = Api();
-                await obj.postData();
-                bool status = await obj.postData();
-                if (status == true) {
-                  showSnakbar('Success', context, status);
-                }
-                if (status == false) {
-                  showSnakbar('Faild', context, status);
+                // Api obj = Api(); // Remove this line
+                await value.postData(); // Use the existing instance
+
+                if (value.status == true) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.green,
+                        content: Text('Success'),
+                      ),
+                    );
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.red,
+                        content: Text('Failed'),
+                      ),
+                    );
+                  }
                 }
               },
-              child: const Text('Fetch Data')),
-        ],
+              child: const Text('Fetch Data'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   showSnakbar(String content, context, bool status) {
-    return AlertDialog(
-      backgroundColor: status ? Colors.green : Colors.red,
-      content: Text(content),
-      actions: [
-        TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('ok'))
-      ],
+    return ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: status ? Colors.green : Colors.red,
+        content: Text(content),
+      ),
     );
   }
 }
